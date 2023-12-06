@@ -5,60 +5,88 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <title>Subnet Calculator</title>
-
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="./app.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+          theme: {
+            extend: {
+              colors: {
+                main: '#43FFAF',
+                sub: '#526777',
+                background: '#262A33',
+                error: '#FF5F5F',
+              }
+            }
+          }
+        }
+      </script>
 </head>
-<body class="min-h-screen bg-neutral-900">
+<body x-data="subnetLogic" class="min-h-screen bg-background">
     <div class="max-w-7xl h-screen py-8 flex items-center justify-center flex-col gap-10 mx-auto relative">
         <!-- <h1 class="text-6xl font-bold text-[#a1b7bd]">IPv4 Subnet Calculator</h1> -->
-        <div class="w-full flex flex-col items-center gap-3 p-12">
-            <div class="flex justify-center">
-                <input type="text" max="15" class="text-neutral-200 w-2/3 text-7xl text-right font-semibold tracking-widest bg-transparent border-none placeholder:text-neutral-700 focus:border-none focus:outline-none" placeholder="000.000.000.000">
-                <select class="text-neutral-700 text-7xl text-left font-semibold tracking-widest bg-transparent border-none" name="" id="">
-                    <option class="text-base" value="8" selected="selected">/8</option>
-                    <option class="text-base" value="9">/9</option>
-                    <option class="text-base" value="10">/10</option>
-                    <option class="text-base" value="11">/11</option>
-                    <option class="text-base" value="12">/12</option>
-                    <option class="text-base" value="13">/13</option>
-                    <option class="text-base" value="14">/14</option>
-                    <option class="text-base" value="15">/15</option>
-                    <option class="text-base" value="16">/16</option>
-                    <option class="text-base" value="17">/17</option>
-                    <option class="text-base" value="18">/18</option>
-                    <option class="text-base" value="19">/19</option>
-                    <option class="text-base" value="20">/20</option>
-                    <option class="text-base" value="21">/21</option>
-                    <option class="text-base" value="22">/22</option>
-                    <option class="text-base" value="23">/23</option>
-                    <option class="text-base" value="24">/24</option>
-                    <option class="text-base" value="25">/25</option>
-                    <option class="text-base" value="26">/26</option>
-                    <option class="text-base" value="27">/27</option>
-                    <option class="text-base" value="28">/28</option>
-                    <option class="text-base" value="29">/29</option>
-                    <option class="text-base" value="30">/30</option>
+        <div class="w-full flex flex-col items-center p-12">
+            <label for="ip_address" class="text-sub text-lg">IP Address</label>
+            <div class="flex justify-center items-center mb-4">
+                <input x-model="ip_address" x-on:input="ipAddressChange" name="ip_address" type="text" class="text-neutral-200 w-2/3 text-7xl text-center font-semibold tracking-widest bg-transparent border-none placeholder:text-sub focus:border-none focus:outline-none" placeholder="000.000.000.000">
+            </div>
+            <!-- <span class="text-sub cursor-pointer">hold 
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-command inline w-5" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"><path d="M7 9a2 2 0 1 1 2 -2v10a2 2 0 1 1 -2 -2h10a2 2 0 1 1 -2 2v-10a2 2 0 1 1 2 2h-10" /></svg>
+                for <span>binary</span>
+            </span> -->
+            <label for="subnet_mask" class="text-sub text-lg">Subnet Mask</label>
+            <div class="flex justify-center items-center mb-4">
+                <!-- <input x-model="subnet_mask" x-on:input="subnetMaskChange" name="subnet_mask" type="text" class="text-neutral-200  text-7xl text-right font-semibold tracking-widest bg-transparent border-none placeholder:text-sub focus:border-none focus:outline-none" placeholder="255.255.255.000"> -->
+                <span x-text="subnet_mask_dec" class="text-neutral-200  text-7xl text-right font-semibold tracking-widest bg-transparent border-none placeholder:text-sub focus:border-none focus:outline-none"></span>
+                <select x-model="subnet_mask" x-on:change="subnetMaskChange" class="text-sub text-7xl text-left font-semibold tracking-wide bg-transparent border-none" name="" id="">
+                    <template x-for="number in Array.from({ length: 32 }, (_, index) => index + 1)">
+                        <option class="text-base" x-text="`/${number}`" x-bind:value="number"></option>
+                    </template>
                 </select>
             </div>
-            <span class="text-neutral-700 cursor-pointer">decimal to binary
-                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler inline icon-tabler-switch-vertical w-5" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 8l4 -4l4 4" /><path d="M7 4l0 9" /><path d="M13 16l4 4l4 -4" /><path d="M17 10l0 10" /></svg>
-            </span>
-            <input type="text" class="text-neutral-200 text-2xl text-center font-semibold tracking-widest bg-transparent border-none w-full placeholder:text-neutral-700 focus:border-none focus:outline-none" placeholder="00000000.00000000.00000000.00000000">
-            <input type="text" class="text-neutral-200 text-7xl text-center font-semibold tracking-widest bg-transparent border-none w-full placeholder:text-neutral-700 focus:border-none focus:outline-none" placeholder="255.255.255.000">
+            <div class="flex justify-between items-center gap-y-5 flex-wrap">
+                <!-- Network Address -->
+                <div class="basis-1/3 flex flex-col justify-center items-center">
+                    <span class="text-sub text-lg">Network Address:</span>
+                    <span x-text="network_address" class="text-main text-xl tracking-widest"></span>
+                </div>
+                <!-- Broadcast Address -->
+                <div class="basis-1/3 flex flex-col justify-center items-center">
+                    <span class="text-sub text-lg">Broadcast Address:</span>
+                    <span x-text="broadcast_address" class="text-main text-xl tracking-widest">192.168.1.255</span>
+                </div>
+                <!-- Usable Host IP Range -->
+                <div class="basis-1/3 flex flex-col justify-center items-center">
+                    <span class="text-sub text-lg">Usable Host IP Range:</span>
+                    <span x-text="ip_range" class="text-main text-xl tracking-widest">192.168.1.1 - 192.168.1.254</span>
+                </div>
+                <!-- Number of usable hosts -->
+                <div class="basis-1/3 flex flex-col justify-center items-center">
+                    <span class="text-sub text-lg">Number of Usable Hosts:</span>
+                    <span x-text="usable_hosts" class="text-main text-xl tracking-widest">254</span>
+                </div>
+                <!-- Total number of hosts -->
+                <div class="basis-1/3 flex flex-col justify-center items-center">
+                    <span class="text-sub text-lg">Total Number of Hosts:</span>
+                    <span x-text="total_hosts" class="text-main text-xl tracking-widest">256</span>
+                </div>
+                <!-- CIDR Notation -->
+                <div class="basis-1/3 flex flex-col justify-center items-center">
+                    <span class="text-sub text-lg">CIDR Notation:</span>
+                    <span x-text="cidr_notation" class="text-main text-xl tracking-widest">192.168.1.0/24</span>
+                </div>
+                <!-- Wildcard Mask -->
+                <div class="basis-1/3 flex flex-col justify-center items-center">
+                    <span class="text-sub text-lg">Wildcard Mask:</span>
+                    <span x-text="wildcard_mask" class="text-main text-xl tracking-widest">0.0.0.255</span>
+                </div>
+            </div>
+            <!-- <div class="">
+                <h3>All 64 of the Possible /30 Networks for 94.69.206.1</h3>
+            </div> -->
         </div>
     </div>
 </body>
-<!-- <body class="min-h-screen bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-black via-blue-950 to-gray-950">
-    <div class="max-w-7xl h-screen py-8 flex justify-center flex-col gap-10 mx-auto relative">
-        <h1 class="text-6xl font-bold text-blue-100">IPv4 Subnet Calculator</h1>
-        <div id="ipcontainer" class="backdrop-blur-[6.4px] border rounded-2xl border-solid border-[rgba(255,255,255,0.35)] w-full p-12">
-            <h2 class="text-white text-3xl">Alialialialiali</h2>
-        </div>
-    </div>
-    <style>
-        #ipcontainer {
-            background: rgba(255, 255, 255, 0.12);
-        }
-    </style>
-</body> -->
 </html>
+
