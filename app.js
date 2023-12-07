@@ -71,7 +71,9 @@ document.addEventListener('alpine:init', () => {
 
         subnetMaskChange () {
             this.subnet_mask_dec = this.subnet_values[this.subnet_mask - 1];
-            this.subnet();
+            if (this.ip_address) {
+                this.subnet();
+            }
         },
 
         octetToBinary(num) {
@@ -120,19 +122,35 @@ document.addEventListener('alpine:init', () => {
             ipArray = ip.split("");
             maskArray = mask.split("");
             resultArray = [];
+            decimalArray = [];
 
             for (let i = 0; i < 32; i++) {
                 resultArray.push(parseInt(ipArray[i]) & parseInt(maskArray[i]))
             }
-            console.log(ipArray.join(""))
-            console.log(maskArray.join(""))
-            console.log(resultArray.join(""));
+
+            let octets = this.createArrays(resultArray, 8)
+            octets.forEach(octetArray => {
+                let base2 = 128;
+                let decimal = 0;
+                octetArray.forEach(bit => {
+                    if (bit == 1) {
+                        decimal = decimal + base2;
+                    }
+                    base2 /= 2;
+                });
+                decimalArray.push(decimal);
+            });
+
+            this.network_address = decimalArray.join(".");
+            this.cidr_notation = this.ip_address + "/" + this.subnet_mask
             
-            // let result = ip & mask;
-            // console.log(ip);
-            // console.log(mask);
-            // console.log("Result:" + result);
         },
+
+        createArrays(originalArray, chunkSize) {
+            return Array.from({ length: Math.ceil(originalArray.length / chunkSize) }, (_, index) =>
+                originalArray.slice(index * chunkSize, (index + 1) * chunkSize)
+            );
+        }
 
         
     }));
