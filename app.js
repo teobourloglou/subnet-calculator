@@ -1,52 +1,24 @@
 document.addEventListener('alpine:init', () => {
     Alpine.data('subnetLogic', () => ({
         ip_address: '',
-        subnet_mask: '/8',
-        subnet_mask_dec: '128.0.0.0',
-        subnet_values: [
-            '128.0.0.0',
-            '192.0.0.0',
-            '224.0.0.0',
-            '240.0.0.0',
-            '248.0.0.0',
-            '252.0.0.0',
-            '254.0.0.0',
-            '255.0.0.0',
-            '255.128.0.0',
-            '255.192.0.0',
-            '255.224.0.0',
-            '255.240.0.0',
-            '255.248.0.0',
-            '255.252.0.0',
-            '255.254.0.0',
-            '255.255.0.0',
-            '255.255.128.0',
-            '255.255.192.0',
-            '255.255.224.0',
-            '255.255.240.0',
-            '255.255.248.0',
-            '255.255.252.0',
-            '255.255.254.0',
-            '255.255.255.0',
-            '255.255.255.128',
-            '255.255.255.192',
-            '255.255.255.224',
-            '255.255.255.240',
-            '255.255.255.248',
-            '255.255.255.252',
-            '255.255.255.254',
-            '255.255.255.255',
+        subnet_mask: '30',
+        subnet_mask_dec: '255.255.255.252',
+        subnet_values: [ 
+            '128.0.0.0', '192.0.0.0', '224.0.0.0', '240.0.0.0', '248.0.0.0', '252.0.0.0', '254.0.0.0', '255.0.0.0',
+            '255.128.0.0', '255.192.0.0', '255.224.0.0', '255.240.0.0', '255.248.0.0', '255.252.0.0', '255.254.0.0', '255.255.0.0',
+            '255.255.128.0', '255.255.192.0', '255.255.224.0', '255.255.240.0', '255.255.248.0', '255.255.252.0', '255.255.254.0', '255.255.255.0',
+            '255.255.255.128', '255.255.255.192', '255.255.255.224', '255.255.255.240', '255.255.255.248', '255.255.255.252',
         ],
         
         ipAddressDotCount: 0,
         
-        network_address: '',
-        broadcast_address: '',
-        ip_range: '',
-        usable_hosts: '',
-        total_hosts: '',
-        cidr_notation: '',
-        wildcard_mask: '',
+        network_address: '0.0.0.0',
+        broadcast_address: '0.0.0.0',
+        ip_range: '0.0.0.0 - 0.0.0.0',
+        usable_hosts: '0',
+        total_hosts: '0',
+        cidr_notation: '0.0.0.0/30',
+        wildcard_mask: '0.0.0.0',
         
         ipAddressChange () {
             let input = this.ip_address;
@@ -76,83 +48,139 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        octetToBinary(num) {
-            if (num === 0) return "0"; 
-  
-            let array = []; 
-            for (; num > 0; num = Math.floor(num / 2)) { 
-                array.unshift(num % 2); 
-            }
-
-            while (array.length < 8) {
-                array.unshift("0");
-            }
-
-            return array.join("");
-        },
-
-        ipToBinary() {
-            let octets = this.ip_address.split('.');
-            let ip = [];
-            octets.forEach(octet => {
-                let binaryOctet = this.octetToBinary(octet);
-                (binaryOctet.length > 8) ? console.log("Error") : ip.push(binaryOctet);
-            });
-            if (ip.length > 4) ip.length = 4;
-            
-            return ip.join("");
-        },
-
-        subnetToBinary() {
-            let octets = this.subnet_mask_dec.split('.');
-            let ip = [];
-            octets.forEach(octet => {
-                let binaryOctet = this.octetToBinary(octet);
-                (binaryOctet.length > 8) ? console.log("Error") : ip.push(binaryOctet);
-            });
-            if (ip.length > 4) ip.length = 4;
-            
-            return ip.join("");
-        },
-
         subnet () {
-            let ip = this.ipToBinary();
-            let mask = this.subnetToBinary();
-
-            ipArray = ip.split("");
-            maskArray = mask.split("");
-            resultArray = [];
-            decimalArray = [];
-
-            for (let i = 0; i < 32; i++) {
-                resultArray.push(parseInt(ipArray[i]) & parseInt(maskArray[i]))
-            }
-
-            let octets = this.createArrays(resultArray, 8)
-            octets.forEach(octetArray => {
-                let base2 = 128;
-                let decimal = 0;
-                octetArray.forEach(bit => {
-                    if (bit == 1) {
-                        decimal = decimal + base2;
-                    }
-                    base2 /= 2;
-                });
-                decimalArray.push(decimal);
-            });
-
-            this.network_address = decimalArray.join(".");
-            this.cidr_notation = this.ip_address + "/" + this.subnet_mask
-            
+            this.network_address = this.calculateNetworkAddress();
+            this.broadcast_address = this.calculateBroadcastAddress();
+            this.ip_range = this.calculateRange();
+            this.cidr_notation = this.ip_address + "/" + this.subnet_mask;
+            this.usable_hosts = this.calculateUsableHosts();
+            this.total_hosts = this.calculateTotalHosts();
+            this.wildcard_mask = this.calculateWildcardMask();
         },
 
-        createArrays(originalArray, chunkSize) {
-            return Array.from({ length: Math.ceil(originalArray.length / chunkSize) }, (_, index) =>
-                originalArray.slice(index * chunkSize, (index + 1) * chunkSize)
-            );
-        }
+        calculateNetworkAddress() {
+            const ipBinary = this.ipToBinary(this.ip_address);
+            const subnetMaskBinary = this.ipToBinary(this.subnet_mask_dec);
+            const networkAddressBinary = this.bitwiseAND(ipBinary, subnetMaskBinary);
+            return this.binaryToIp(networkAddressBinary);
+        },
 
+        calculateBroadcastAddress() {
+            const subnetMaskBinary = this.ipToBinary(this.subnet_mask_dec);
+            const invertedSubnetMaskBinary = this.bitwiseNOT(subnetMaskBinary);
+            const broadcastAddressBinary = this.bitwiseOR(this.ipToBinary(this.network_address), invertedSubnetMaskBinary);
+            return this.binaryToIp(broadcastAddressBinary);
+        },
+
+        calculateRange() {
+            const firstUsableIp = this.incrementIpAddress()
+            const lastUsableIp = this.decrementIpAddress()
+            return firstUsableIp + " - " + lastUsableIp;
+        },
+
+        calculateUsableHosts() {
+            const totalAddresses = Math.pow(2, 32 - this.subnet_mask);
+            const usableHosts = Math.max(totalAddresses - 2, 0);
+            return usableHosts;
+        },
         
+        calculateTotalHosts() {
+            return Math.pow(2, 32 - this.subnet_mask);
+        },
+
+        calculateWildcardMask() {
+            const binarySubnetMask = this.ipToBinary(this.subnet_mask_dec);
+            const binaryWildcardMask = this.bitwiseNOT(binarySubnetMask);
+            const wildcardMask = this.binaryToIp(binaryWildcardMask)
+            return wildcardMask;
+        },
+
+        ipToBinary(ip) {
+            const octets = ip.split('.');
+
+            const binaryOctets = octets.map(octet => {
+                const decimalValue = parseInt(octet);
+                const binaryValue = decimalValue.toString(2);
+                const paddedBinaryValue = binaryValue.padStart(8, '0');
+                return paddedBinaryValue;
+            });
+
+            return binaryOctets.join('');
+        },
+
+        binaryToIp(binary) {
+            const binaryParts = binary.match(/.{1,8}/g);
+
+            const decimalOctets = binaryParts.map(part => parseInt(part, 2));
+            const ipAddress = decimalOctets.join('.');
+
+            return ipAddress;
+        },
+
+        bitwiseAND(binary1, binary2) {
+            const bits1 = binary1.split('');
+            const bits2 = binary2.split('');
+            const resultBits = [];
+        
+            for (let index = 0; index < bits1.length; index++) {
+                const resultBit = (bits1[index] === '1' && bits2[index] === '1') ? '1' : '0';
+                resultBits.push(resultBit);
+            }
+        
+            return resultBits.join('');
+        },
+
+        bitwiseOR(binary1, binary2) {
+            const bits1 = binary1.split('');
+            const bits2 = binary2.split('');
+            const resultBits = [];
+        
+            for (let index = 0; index < bits1.length; index++) {
+                const resultBit = (bits1[index] === '1' || bits2[index] === '1') ? '1' : '0';
+                resultBits.push(resultBit);
+            }
+        
+            return resultBits.join('');
+        },
+
+        bitwiseNOT(binary) {
+            const bits = binary.split('');
+            const resultBits = [];
+        
+            for (let index = 0; index < bits.length; index++) {
+                const resultBit = (bits[index] === '1' ? '0' : '1');
+                resultBits.push(resultBit);
+            }
+        
+            return resultBits.join('');
+        },
+
+        incrementIpAddress() {
+            const parts = this.network_address.split('.').map(part => parseInt(part));
+            for (let i = parts.length - 1; i >= 0; i--) {
+                if (parts[i] < 255) {
+                    parts[i]++;
+                    break;
+                } else {
+                    parts[i] = 0;
+                }
+            }
+            return parts.join('.');
+        },
+        
+        decrementIpAddress() {
+            const parts = this.broadcast_address.split('.').map(part => parseInt(part));
+            for (let i = parts.length - 1; i >= 0; i--) {
+                if (parts[i] > 0) {
+                    parts[i]--;
+                    break;
+                } else {
+                    parts[i] = 255;
+                }
+            }
+            return parts.join('.');
+        }
+               
     }));
 
 });
