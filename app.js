@@ -79,7 +79,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         calculateUsableHosts() {
-            const totalAddresses = Math.pow(2, 32 - this.subnet_mask);
+            const totalAddresses = this.calculateTotalHosts();
             const usableHosts = Math.max(totalAddresses - 2, 0);
             return usableHosts;
         },
