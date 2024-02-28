@@ -2,7 +2,7 @@
 
 ## Overview
 
-The **Subnet Calculator** is a simple tool designed to facilitate subnet calculations for IPv4 addresses.
+The **Subnet Calculator** is a simple tool designed to facilitate subnet calculations for IPv4 addresses. You can read my article about this project [here](https://sudorealm.com/blog/ipv4-subnetting)
 
 ![Mr. Robot](https://media.giphy.com/media/ZKQpx4TYrxTtS/giphy.gif)
 
